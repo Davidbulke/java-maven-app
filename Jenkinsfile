@@ -1,7 +1,20 @@
+#!/usr/bin/env groovy
+
+library identifier: 'jenkins-shared-library@master', retriever: modernSCM(
+        [$class: 'GitSCMSource',
+         remote: 'https://github.com/Davidbulke/java-maven-app.git',
+         credentialsId: 'github-credentials'
+        ]
+)
+
+
 def gv
 
 pipeline {
     agent any
+    tools {
+        maven 'Maven'
+    }
     stages {
         stage("init") {
             steps {
@@ -13,24 +26,23 @@ pipeline {
         stage("build jar") {
             steps {
                 script {
-                    echo "building jar"
-                    //gv.buildJar()
+                    buildJar()
                 }
             }
         }
-        stage("build image") {
+        stage("build and push image") {
             steps {
                 script {
-                    echo "building image"
-                    //gv.buildImage()
+                    buildImage 'davidbulke/java-maven-app:jma-3.0'
+                    dockerLogin()
+                    dockerPush 'davidbulke/java-maven-app:jma-3.0'
                 }
             }
         }
         stage("deploy") {
             steps {
                 script {
-                    echo "deploying"
-                    //gv.deployApp()
+                    gv.deployApp()
                 }
             }
         }
